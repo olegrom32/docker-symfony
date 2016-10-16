@@ -3,23 +3,35 @@ FROM php:7.0-fpm
 
 MAINTAINER Maxence POUTORD <maxence.poutord@gmail.com>
 
+RUN sed -i "s/httpredir.debian.org/mirrors.tuna.tsinghua.edu.cn/" /etc/apt/sources.list
 RUN apt-get update && apt-get install -y \
     git \
-    unzip
+    unzip \
+    npm \
+    libicu-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 RUN composer --version
 
+# Install Bower
+RUN npm install -g bower
+RUN ln -s /usr/bin/nodejs /usr/bin/node
+
 # Set timezone
 RUN rm /etc/localtime
-RUN ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime
+RUN ln -s /usr/share/zoneinfo/Europe/Kiev /etc/localtime
 RUN "date"
 
 # Type docker-php-ext-install to see available extensions
-RUN docker-php-ext-install pdo pdo_mysql
+RUN docker-php-ext-install pdo intl
 
-RUN echo 'alias sf="php app/console"' >> ~/.bashrc
-RUN echo 'alias sf3="php bin/console"' >> ~/.bashrc
+# Install MongoDB extension.
+RUN pecl install mongodb
+RUN echo "extension=mongodb.so" > /usr/local/etc/php/conf.d/mongodb.ini
+
+RUN echo 'alias sf="php bin/console"' >> ~/.bashrc
+RUN echo 'alias ll="ls -l"' >> ~/.bashrc
 
 WORKDIR /var/www/symfony

@@ -2,13 +2,12 @@ version: '2'
 
 services:
     db:
-        image: mysql
+        image: mongo:latest
         ports:
-            - 3306:3306
+            - 27017:27017
         volumes:
-            - "./.data/db:/var/lib/mysql"
-        environment:
-            MYSQL_ROOT_PASSWORD: root
+            - "../database/mongo:/var/lib/mongodb"
+        command: --storageEngine=wiredTiger
     redis:
         image: redis:alpine
         ports:
@@ -21,8 +20,7 @@ services:
             - db:mysqldb
             - redis
         volumes:
-            - ../../sites/lab/symfony-rest-beer-edition:/var/www/symfony
-            - ./logs/symfony:/var/www/symfony/app/logs
+            - .:/var/www/symfony
     nginx:
         build: nginx
         ports:
@@ -32,14 +30,14 @@ services:
         volumes_from:
             - php
         volumes:
-            - ./logs/nginx/:/var/log/nginx
+            - ./app/logs/:/var/log/nginx
     elk:
         image: willdurand/elk
         ports:
             - 81:80
         volumes:
-            - ./elk/logstash:/etc/logstash
-            - ./elk/logstash/patterns:/opt/logstash/patterns
+            - ./docker/elk/logstash:/etc/logstash
+            - ./docker/elk/logstash/patterns:/opt/logstash/patterns
         volumes_from:
             - php
             - nginx
